@@ -208,3 +208,15 @@ def test_config_validation():
     with pytest.raises(ValueError):
         Config.from_dict({"nope": 1})
     assert Config(mode="monitor").mode == "monitor"
+
+
+def test_forwarded_for_uses_right_most_hop():
+    """A client cannot prepend a Googlebot IP to X-Forwarded-For to get the free lane."""
+    from forgemesh_pay_per_crawl.core.config import Config
+    from forgemesh_pay_per_crawl.core.gate import Gate
+    cfg = Config(pay_to="0x" + "ab" * 20, price_usd=0.01, mode="gate", trust_proxy_header="x-forwarded-for")
+    gate = Gate(cfg)
+    class R:
+        ip = "203.0.113.9"
+        headers = {"x-forwarded-for": "66.249.66.1, 203.0.113.9", "user-agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}
+    assert gate.client_ip(R()) == "203.0.113.9"

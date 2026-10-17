@@ -45,9 +45,13 @@ class Gate:
         ip = req.ip
         hdr = self.cfg.trust_proxy_header.lower()
         if hdr and req.headers.get(hdr):
-            first = req.headers[hdr].split(",")[0].strip()
-            if first:
-                ip = first
+            # Multi-value forwarding headers grow on the LEFT with client-supplied
+            # values; the right-most entry is the one the proxy in front of us
+            # appended. Single-value edge headers (CF-Connecting-IP, X-Real-IP,
+            # True-Client-IP) have one entry, so this is a no-op for them.
+            parts = [p.strip() for p in req.headers[hdr].split(",") if p.strip()]
+            if parts:
+                ip = parts[-1]
         return ip
 
     def url(self, req: Request) -> str:

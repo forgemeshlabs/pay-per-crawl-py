@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forgemesh-pay-per-crawl"
-version = "0.1.0"
+version = "0.1.1"
 description = "Charge AI crawlers and bots per page with x402 USDC micropayments on Base. ASGI, WSGI and Django middleware; you keep 100%."
 readme = "README.md"
 requires-python = ">=3.10"
