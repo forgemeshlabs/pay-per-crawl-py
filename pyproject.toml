@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forgemesh-pay-per-crawl"
+version = "0.1.0"
+description = "Charge AI crawlers and bots per page with x402 USDC micropayments on Base. ASGI, WSGI and Django middleware; you keep 100%."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "ForgeMesh Labs", email = "hello@forgemesh.io" }]
+keywords = ["x402", "mpp", "pay-per-crawl", "402", "ai-crawlers", "usdc", "base", "fastapi", "flask", "django", "asgi", "wsgi"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+  "Typing :: Typed",
+]
+dependencies = ["pycryptodome>=3.20"]
+
+[project.optional-dependencies]
+httpx = ["httpx>=0.27"]
+test = ["pytest>=8", "httpx>=0.27", "fastapi>=0.110", "uvicorn>=0.29", "flask>=3", "django>=4.2"]
+
+[project.urls]
+Homepage = "https://forgemesh.io"
+Repository = "https://github.com/forgemeshlabs/pay-per-crawl-py"
+Issues = "https://github.com/forgemeshlabs/pay-per-crawl-py/issues"
+PHP-WordPress-edition = "https://github.com/forgemeshlabs/forgemesh-pay-per-crawl"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+forgemesh_pay_per_crawl = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
