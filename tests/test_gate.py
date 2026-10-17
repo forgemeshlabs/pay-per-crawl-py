@@ -187,7 +187,8 @@ def test_proxy_ip_header_used_for_classification(mock):
             return []
 
     g = Gate(Config(pay_to=PAY_TO, mode="gate", facilitator_url=mock.url, trust_proxy_header="CF-Connecting-IP"), resolver=R())
-    g.handle(req("Mozilla/5.0 (compatible; Googlebot/2.1)", headers={"cf-connecting-ip": "203.0.113.50, 10.0.0.1"}, ip="10.0.0.1"))
+    # Right-most hop wins: a client-prepended "66.249.66.1" must not be the address we verify.
+    g.handle(req("Mozilla/5.0 (compatible; Googlebot/2.1)", headers={"cf-connecting-ip": "66.249.66.1, 203.0.113.50"}, ip="10.0.0.1"))
     assert seen == ["203.0.113.50"]
 
 
