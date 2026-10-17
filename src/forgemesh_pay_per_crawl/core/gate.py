@@ -1,6 +1,8 @@
 """The gate: classify the request, apply policy, answer 402 or let it through."""
 from __future__ import annotations
 
+import posixpath
+import re
 import time
 from typing import Callable, Optional
 
@@ -13,8 +15,16 @@ from .locks import MemoryNonceLock
 from .pro import ProReporter, Stats
 from .x402 import X402, Transport, b64_encode_json, dumps
 
-EXEMPT_PREFIXES = ("/robots.txt", "/llms.txt", "/agents.txt", "/.well-known/", "/favicon.ico", "/sitemap")
+EXEMPT_FILES = frozenset(("/robots.txt", "/llms.txt", "/agents.txt", "/favicon.ico"))
+_SITEMAP_RE = re.compile(r"^/[a-z0-9_-]*sitemap[a-z0-9_-]*\.xml$")
 _PAID_HEADERS = ("PAYMENT-RESPONSE", "X-PAYMENT-RESPONSE")
+
+
+def _under(norm: str, allow: str) -> bool:
+    """norm equals allow or sits beneath it ("/pricing" never matches "/pricing-secret")."""
+    if allow.endswith("/"):
+        return norm.startswith(allow)
+    return norm == allow or norm.startswith(allow + "/")
 
 
 class Gate:
@@ -87,9 +97,22 @@ class Gate:
         return self._gate(req)
 
     def exempt(self, path: str) -> bool:
-        if any(path.startswith(p) for p in EXEMPT_PREFIXES):
+        """True only for an exact exempt file, a root sitemap .xml, /.well-known/ or an allow path.
+
+        Matching is on the normalised path at a path-segment boundary; dot segments, doubled slashes
+        and %2e / %2f in the raw path are never exempt.
+        """
+        low = path.lower()
+        if "%2f" in low or "%2e" in low:
+            return False
+        norm = posixpath.normpath(path) if path.startswith("/") else ""
+        if norm.startswith("//"):
+            norm = "/" + norm.lstrip("/")
+        if not norm or norm.rstrip("/") != path.rstrip("/"):
+            return False
+        if norm in EXEMPT_FILES or _SITEMAP_RE.match(norm) or _under(norm, "/.well-known/") or norm == "/.well-known":
             return True
-        return any(p.strip() and path.startswith(p.strip()) for p in self.cfg.allow_paths)
+        return any(p.strip() and _under(norm, p.strip()) for p in self.cfg.allow_paths)
 
     # ── Core ─────────────────────────────────────────────────────────────
 

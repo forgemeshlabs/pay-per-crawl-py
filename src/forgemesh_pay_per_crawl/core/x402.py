@@ -27,7 +27,7 @@ USDC_DECIMALS = 6
 TIMEOUT_SECS = 300
 MPP_PROBLEMS = "https://paymentauth.org/problems/"
 DEFAULT_FACILITATOR = "https://facilitator.payai.network"
-VERSION = "0.1.0"
+VERSION = "0.1.2"
 USER_AGENT = f"forgemesh-pay-per-crawl-py/{VERSION}"
 
 # Transport: (url, json body, headers) -> parsed JSON dict. Raise TransportError on failure.

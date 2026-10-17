@@ -221,3 +221,22 @@ def test_forwarded_for_uses_right_most_hop():
         ip = "203.0.113.9"
         headers = {"x-forwarded-for": "66.249.66.1, 203.0.113.9", "user-agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}
     assert gate.client_ip(R()) == "203.0.113.9"
+
+
+@pytest.mark.parametrize("path,allowed", [
+    ("/robots.txt", True), ("/robots.txt.html", False), ("/robots.txt.anything", False),
+    ("/llms.txt", True), ("/llms.txtx", False), ("/agents.txt", True), ("/favicon.ico", True),
+    ("/sitemap.xml", True), ("/wp-sitemap-posts-post-1.xml", True), ("/sitemap_index.xml", True),
+    ("/sitemapfoo", False), ("/sitemap.xml/x", False), ("/a/sitemap.xml", False),
+    ("/.well-known/x402.json", True), ("/.well-known/../post", False),
+    ("/.well-known/%2e%2e/post", False), ("/.well-known/%2E%2E/post", False), ("/foo%2fbar", False),
+    ("/pricing", True), ("/pricing/", True), ("/pricing/plans", True), ("/pricing-secret", False),
+    ("//robots.txt", False), ("/post", False), ("/", False),
+])
+def test_exempt_anchored(mock, path, allowed):
+    assert gate(mock, allow_paths=["/pricing"]).exempt(path) is allowed
+
+
+def test_exempt_allow_path_trailing_slash(mock):
+    g = gate(mock, allow_paths=["/docs/"])
+    assert g.exempt("/docs/a") and not g.exempt("/docs") and not g.exempt("/docsx")
