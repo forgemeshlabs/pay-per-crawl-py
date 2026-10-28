@@ -1,12 +1,16 @@
 # ForgeMesh Pay-per-Crawl for Python
 
-Charge AI crawlers and bots per page with [x402](https://x402.org) USDC micropayments on Base, paid straight to your wallet. Humans and verified search engines read free. Middleware for **FastAPI / Starlette (ASGI)**, **Flask and any WSGI app**, and **Django**, on one framework-free core.
+**Know who crawls your site. Charge the ones that can pay.**
+
+Pay-per-Crawl shows you every AI crawler, SEO crawler and script that fetches your pages, verifies the real search engines by reverse DNS so SEO is untouched, and lets you answer everything else with a standard HTTP 402 price in USDC on Base, paid to your own wallet. Be clear about what pays today: x402-capable agents do; the big AI labs' crawlers (GPTBot, ClaudeBot, PerplexityBot and friends) do not yet pay anyone per page, and they simply get no content from a charging site. Until they do, this is an honest bot ledger with the price already on the door. You see who takes what, you can block or charge any of it, and when a crawler does pay, it goes straight to you. Nobody in between holds the money. Humans and verified search engines read free.
+
+Middleware for **FastAPI / Starlette (ASGI)**, **Flask and any WSGI app**, and **Django**, on one framework-free core.
 
 This is the Python edition of the [WordPress plugin](https://github.com/forgemeshlabs/forgemesh-pay-per-crawl); behaviour is identical.
 
 - **Humans see nothing different.** Browsers get the page as always.
 - **Verified search engines stay free.** Googlebot, Bingbot, DuckDuckBot, Applebot and others are checked by reverse DNS, so SEO is untouched. A crawler that only *claims* to be Googlebot is treated as a script.
-- **AI crawlers, SEO crawlers and scripts get `402 Payment Required`** with an x402 challenge (v2 `PAYMENT-REQUIRED` header + v1 JSON body) and an MPP `WWW-Authenticate: Payment` challenge. They pay USDC on Base and retry; the page is served only after the payment settles on-chain.
+- **AI crawlers, SEO crawlers and scripts get `402 Payment Required`** with an x402 challenge (v2 `PAYMENT-REQUIRED` header + v1 JSON body) and an MPP `WWW-Authenticate: Payment` challenge. An x402-capable client pays USDC on Base and retries; the page is served only after the payment settles on-chain. A crawler that cannot pay gets no content.
 - **You keep 100%.** The payer's USDC goes directly to your wallet. No custody, no account, no API key, no revenue share.
 - **Discovery built in.** Serves `/.well-known/x402.json`, `/llms.txt` and `/agents.txt`.
 
@@ -76,12 +80,14 @@ If your site is proxied by Cloudflare, set **AI Crawl Control** (and any Bot Fig
 
 ## How a payment works
 
+This is what happens when an x402-capable client fetches a page.
+
 1. A bot requests a page and gets `402` with the price, asset (USDC on Base) and your wallet, in the `PAYMENT-REQUIRED` header (x402 v2), the JSON body (x402 v1, with `invalidReason` when a payment was rejected) and `WWW-Authenticate: Payment` (MPP).
 2. The bot signs a USDC transfer authorization (EIP-3009) and retries with it in `PAYMENT-SIGNATURE` (v2), `X-PAYMENT` (v1) or `Authorization: Payment` (MPP).
 3. The middleware checks recipient, amount and expiry locally, locks the authorization nonce against replay, then posts it to the **facilitator** (`/verify`, then `/settle`). The facilitator verifies and submits it on-chain; it never holds funds. v1 payments are forwarded in v1 shape.
 4. The page is served only when a transaction hash comes back, with the receipt in `PAYMENT-RESPONSE`, `X-PAYMENT-RESPONSE` and (MPP) `Payment-Receipt`.
 
-The package never contacts ForgeMesh. Its only outbound requests are to the facilitator you chose, and only when a payment is presented. (The optional Pro reporter below is the one exception, and is off without a key.)
+Without a Pro key the package never contacts ForgeMesh. Its only outbound requests are to the facilitator you chose, and only when a payment is presented. (The optional Pro reporter below is the one exception, and is off without a key.)
 
 ## Money flow
 
